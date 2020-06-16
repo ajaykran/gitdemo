@@ -1,0 +1,394 @@
+----DM REJECTS  - check emial folder -- Datamart exclusions  - excluions_cnt_explanation - saved on 1/9/2020
+select * from emmt_dm.DM_NFS_OT_EXCLUSION_ROLLUP_V;
+select * from EXCLUSION_MATRIX_V ;
+
+select * from emmt_app.BATCH_EXCEPTION_DETAIL_VIEW;
+-----Bronze list
+select count(*) from emmt_app.mig_batch_list
+where batch_id=214
+and (reject_list!='X'
+or reject_list is null); -- 3204729  Rows --312849  Rows --439910 rows 
+
+select count(*) from emmt_app.mig_batch_list
+where batch_id=208
+and reject_list is null;   
+
+select count(*) from emmt_app.mig_batch_list
+where batch_id=214
+and reject_list is null;    
+
+select * from emmt_app.mig_batch_list where ban = '969159618';
+
+---------Silver list 
+select count(*) from emmt_app.mig_batch_list
+where batch_id=213
+and (reject_list not in ('X','B','Y') or 
+reject_list is null); --- 3204119,  18554374 
+
+--- Recon ---
+select * from emmt_bb.audit_summary_view
+where batch_id=249; -- 17992573
+
+---- Gold ---
+select count(*) from emmt_app.mig_batch_list
+where batch_id=212
+and reject_list is null;
+
+
+----- Promos ---
+select count(*) from emmt_dm.promo_driver;
+
+-- Promo rejects load to staging ---
+select count(*) from err_award_migration_staging
+where ora_err_number$=1400;
+
+--- Promo Recon ---
+select * from emmt_APP.promo_audit_summary_view
+where batch_id=201;
+
+----Promo Gold ----
+select * from emmt_dg.promo_response_summary_view where batch_id = 246;
+where promo_loan_migration_status='S';
+where batch_id=221;
+
+----Promo rollback ---
+select count(award_id) from emmt_dm.promo_response
+where ban in
+(select distinct BAN from emmt_app.mig_batch_list where  
+ reject_list is not null and reject_list not in ('X','B','Y')
+and batch_id=204);
+
+------------Multiple batch validation errors 
+SELECT VAL1-VAL2 AS SILVER_LOANS_WITH_MULTIPLE_EXCLUSIONS
+FROM 
+(SELECT COUNT(EIP_EQUIPMENT_ID) AS VAL1 FROM EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE BATCH_ID=228
+AND ((LIST_ID !='Z'
+AND CONSUMER_NAME='31') OR (CONSUMER_ID IN ('45')))),
+(SELECT COUNT(DISTINCT EIP_EQUIPMENT_ID) AS VAL2 FROM EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE BATCH_ID=228
+AND ((LIST_ID !='Z'
+AND CONSUMER_NAME='31') OR (CONSUMER_ID IN ('45'))));
+SELECT COUNT(*) FROM EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE CONSUMER_NAME IN ('RECON', 'BUS_RECON')
+AND BATCH_ID=175
+AND ERROR_CODE IN (19,13,22); --- 774
+
+-------Recon
+select count(*) from emmt_bb.mig_batch_list
+where batch_id=228
+and (reject_list not in ('X','B','Y') or reject_list is null);
+
+
+select count(distinct ban) from mig_batch_list where eip_equipment_id in
+(select eip_equipment_id 
+from emmt_bb.batch_exception_detail_view
+where batch_id=220
+and list_id in ('S','Z')
+and consumer_name not in 'OFSLL'); --- 58
+
+select count(eip_equipment_id) from mig_batch_list 
+where eip_equipment_id in
+(select eip_equipment_id 
+from emmt_bb.batch_exception_detail_view
+where batch_id=220
+and list_id in ('S','Z')
+and consumer_name not in 'OFSLL'); 
+
+select count(eip_equipment_id)
+from emmt_bb.batch_exception_detail_view
+where batch_id=221
+and list_id in ('S','Z');
+
+select count(*) from promo_response
+where promo_loan_migration_status='S';
+
+select count(distinct eip_equipment_id)
+from emmt_bb.batch_exception_detail_view
+where batch_id=174
+and list_id in ('S','Z');
+
+186985 - 186913
+
+
+
+
+
+select eip_equipment_id from rollback_bans_2
+intersect 
+select eip_equipment_id from rollback_bans_1; -- 22118
+
+select count(*) from mig_batch_list where batch_id=175
+and reject_list is null; -- 3814903
+
+select count(eip_equipment_id),list_id,description,consumer_name from batch_exception_detail_view 
+where eip_equipment_id in 
+(select eip_equipment_id from rollback_bans_1)
+group by list_id,description,consumer_name;
+
+select * from emmt_bb.batch_exception_detail_view
+where eip_equipment_id='134048031'; 
+
+select count(*) from ROLLBACK_BANS_NEW;
+where ban=889557366;
+
+
+create table rollback_bans_new as 
+SELECT /*+ FULL(MIG_BATCH_LIST) */ DISTINCT ''||BAN BAN
+  FROM MIG_BATCH_LIST
+WHERE BATCH_ID =175
+   AND EIP_EQUIPMENT_ID
+    IN 
+     (
+       SELECT /*+ FULL(MIG_BATCH_EXCEPTION) */ EIP_EQUIPMENT_ID
+         FROM MIG_BATCH_EXCEPTION
+        WHERE 1=1  --:extract_schema:, :list_filter:
+          AND MIG_BATCH_LOG_ID 
+              IN ( SELECT /*+ FULL(MIG_BATCH_LOG) */ MIG_BATCH_LOG_ID
+                     FROM MIG_BATCH_LOG
+                    WHERE BATCH_ID = 175
+                      AND ( CONSUMER_NAME,LIST_ID ) 
+                            IN ( SELECT /*+ FULL(LS_LIST_CONSUMER) */ CONSUMER_NAME, LIST_ID
+                                   FROM LS_LIST_CONSUMER
+                                  WHERE LS_NAME = 'NFS'
+                                    AND ACTIVE = 'Y'
+                                    AND FLAGS LIKE '%|ROLLBACK|%'
+                               )
+                 ) 
+     ) ;
+     
+     
+
+
+select * from emmt_bb.lslc_extract
+where extract_name like ;
+
+SELECT COUNT(EIP_EQUIPMENT_ID) FROM EMMT_APP.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE (list_id='Z' 
+or CONSUMER_NAME in ('RECON','BUS_RECON', 'PROMO'))
+AND BATCH_ID=201; -- 681
+
+select count(distinct eip_equipment_id) from emmt_bb.mig_batch_exception
+where batch_id=175; -- 190622
+
+SELECT VAL1-VAL2 AS LOANS_WITH_MULTIPLE_EXCLUSIONS 
+FROM 
+(SELECT SUM(REJECT_FILE_ROWS) AS VAL1 
+FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=216
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM'))), 
+(SELECT SUM(REJECT_DISTINCT_ROWS) AS VAL2 FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=216
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM')));  
+
+
+SELECT VAL1-VAL2 AS LOANS_WITH_MULTIPLE_EXCLUSIONS 
+FROM 
+(SELECT SUM(REJECT_FILE_ROWS) AS VAL1 
+FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=249
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM'))), 
+(SELECT SUM(REJECT_DISTINCT_ROWS) AS VAL2 FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=249
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM')));  
+
+SELECT VAL1-VAL2 AS LOANS_WITH_MULTIPLE_EXCLUSIONS
+FROM 
+(SELECT SUM(REJECT_FILE_ROWS) AS VAL1 FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW
+WHERE BATCH_ID=249
+AND ((SORTABLE_LIST_NAME=' 06-PRE-GOLD' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME LIKE '%RECON%'))),
+(SELECT SUM(REJECT_DISTINCT_ROWS) AS VAL2 FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW
+WHERE BATCH_ID=249
+AND ((SORTABLE_LIST_NAME=' 06-PRE-GOLD' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME LIKE '%RECON%')));
+
+
+select * from EMMT_BB.EXECUTIVE_SUMMARY_VIEW WHERE BATCH_ID=249;
+
+
+SELECT * FROM ALL_TABLES WHERE TABLE_NAME LIKE '%CONSUMER%';
+
+SELECT * FROM EMMT_BB.CONSUMER;
+
+SELECT COUNT(*) FROM EIP_ADM.EIP_JUMP_UPGRADE_LOG@NFS_EIP JUMP, EIP_EQUIPMENT EE
+WHERE EE.FINANCE_TYPE IN ('LOAN','LEOP')
+AND JUMP.STATUS IN ('Complete','Pending')
+AND JUMP.JUMP_TO_EQUIP_ID=EE.ID; ----- 512741
+
+SELECT COUNT(*) FROM EIP_JUMP_UPGRADE_LOG
+WHERE STATUS IN ('Complete','Pending'); -- 512741
+
+SELECT COUNT(*) FROM EIP_ADM.EIP_JUMP_UPGRADE_LOG@NFS_EIP JUMP, EIP_EQUIPMENT EE
+WHERE EE.FINANCE_TYPE ='POIP'
+-----AND JUMP.STATUS IN ('Complete','Pending')
+AND JUMP.JUMP_TO_EQUIP_ID=EE.RESIDUAL_EQUIPMENT_ID; ----- 512741
+
+SELECT * FROM EIP_ADM.EIP_JUMP_UPGRADE_LOG@NFS_EIP;
+
+6/25: If Finance_type= LOAN or LEOP : if EIP_equipment.id exist as  EIP_JUMP_UPGRADE_LOG.JUMP_TO_EQUIP_ID in EIP_JUMP_UPGRADE_LOG where STATUS IN ('Complete','Pending')  table 
+then provide EIP_JUMP_UPGRADE_LOG.EIP_EQUIPMENT_ID
+else If Finance_type=POIP: If the POIP eip_equipment.Id exist in EIP_EQUIPMENT.RESIDUAL_EQUIPMENT_ID  of a lease record then provide eip_equipment.ID of the Lease record 
+where this is found
+ELSE NULL (EMMT code sets to UNDEFINED to match with OFSLL when NULL)
+
+if APP_REF_TYPE_CD_TMO in ('JMP','JOD') then populate this field with the EIP_JUMP_UPGRADE_LOG.EIP_EQUIPMENT_ID  
+
+select * from EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+where batch_id=216;
+AND ((LIST_ID ='Z'
+AND CONSUMER_NAME=31) OR (CONSUMER_NAME IN (44,50)))),
+
+------------- Correct logic----------
+
+---- Pre Silver
+SELECT VAL1-VAL2 AS LOANS_WITH_MULTIPLE_EXCLUSIONS 
+FROM 
+(SELECT SUM(REJECT_FILE_ROWS) AS VAL1 
+FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=216
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM'))), 
+(SELECT SUM(REJECT_DISTINCT_ROWS) AS VAL2 FROM EMMT_BB.EXECUTIVE_SUMMARY_VIEW 
+WHERE BATCH_ID=216
+AND ((SORTABLE_LIST_NAME=' 06-PRE-SILVER' 
+AND CONSUMER_NAME='EMMT') OR (CONSUMER_NAME='OFSLL_TRANSFORM')));  
+
+---------------Promos ------------------
+select sum(award_count) from promo_response_summary_view
+where batch_id=216;
+
+
+---- Pre Gold
+SELECT VAL1-VAL2 AS GOLD_LOANS_WITH_MULTIPLE_EXCLUSIONS
+FROM 
+(SELECT COUNT(EIP_EQUIPMENT_ID) AS VAL1 FROM EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE BATCH_ID=221
+AND ((LIST_ID ='Z'
+AND CONSUMER_NAME='31') OR (CONSUMER_ID IN ('44','50')))),
+(SELECT COUNT(DISTINCT EIP_EQUIPMENT_ID) AS VAL2 FROM EMMT_BB.BATCH_EXCEPTION_DETAIL_VIEW
+WHERE BATCH_ID=221
+AND ((LIST_ID ='Z'
+AND CONSUMER_NAME='31') OR (CONSUMER_ID IN ('44','50'))));
+
+----------------
+---The view where the recon is shown to provide diffs/%
+--Recon: 
+select * from EMMT_APP.AUDIT_SUMMARY_PIVOT_VIEW WHERE BATCH_ID = 215;
+--Promo Recon 
+select * from EMMT_APP.PROMO_AUDIT_SUMMARY_PIVOT_VIEW WHERE BATCH_ID = 215;
+SELECT *
+FROM EMMT_DM.PROMO_RECON;
+
+
+
+CREATE TABLE TA2 AS;
+ SELECT /*+ FULL(MIG_BATCH_EXCEPTION) */ distinct EIP_EQUIPMENT_ID
+                    FROM   emmt_app.MIG_BATCH_EXCEPTION
+                    WHERE MIG_BATCH_LOG_ID 
+                          IN ( SELECT /*+ FULL(MIG_BATCH_LOG) */ MIG_BATCH_LOG_ID
+                                 FROM emmt_app.MIG_BATCH_LOG
+                                WHERE BATCH_ID = 205
+                                  AND ( CONSUMER_NAME,LIST_ID ) 
+                                        IN ( SELECT /*+ FULL(LS_LIST_CONSUMER) */ CONSUMER_NAME, LIST_ID
+                                               FROM emmt_app.LS_LIST_CONSUMER
+                                              WHERE LS_NAME = 'NFS'
+                                              AND CONSUMER_NAME = 'PROMO'
+                                                AND ACTIVE = 'Y'
+                                                AND FLAGS LIKE '%|ROLLBACK|%' ) )  ;
+
+
+select * from emmt_app.LS_LIST_CONSUMER;
+
+CREATE TABLE TA4 AS;
+SELECT * FROM EMMT_BB.MIG_BATCH_LIST WHERE BATCH_ID = 249 AND REJECT_LIST IS NOT NULL
+AND EIP_EQUIPMENT_ID IN ( 
+SELECT EIP_EQUIPMENT_ID FROM TA2)
+AND REJECT_LIST = 'S';
+
+select * from emmt_app.mig_batch_list;
+
+select * from emmt_app.MIG_BATCH_LOG;
+
+select * from emmt_app.MIG_BATCH_EXCEPTION where batch_id = 205;
+
+
+
+SELECT count(distinct eip_equipment_id),error_string FROM EMMT_BB.MIG_BATCH_EXCEPTION WHERE eip_equipment_id IN ( 
+SELECT EIP_EQUIPMENT_ID FROM TA4)
+and batch_id = 249 
+group by error_string;
+
+
+select DISTINCT EIP_EQUIPMENT_ID from EMMT_BB.MIG_BATCH_EXCEPTION WHERE eip_equipment_id IN ( 
+SELECT EIP_EQUIPMENT_ID FROM TA4)
+and batch_id = 249 ;
+
+select * from emmt_bb.mig_batch_list where eip_equipment_id in ( 
+165272661,
+179510995,
+89222650)
+and batch_id = 249;
+
+
+
+SELECT * FROM TA4 WHERE EIP_EQUIPMENT_ID IN ( 
+33041704,
+87406803,
+60492169);
+
+select * from emmt_bb.mig_batch_list where ban in ( 
+956103988)
+and batch_id = 249;
+
+select * from emmt_bb.mig_batch_exception where eip_equipment_id = '142059733';
+
+select * from promo_driver where award_id in ( 
+select eip_equipment_id from TA4);
+
+create table ta5 as;
+select * from TA4 WHERE eip_equipment_id NOT IN ( 
+SELECT AWARD_ID FROM PROMO_DRIVER);
+
+
+
+select * from mig_batch_exception;
+select count(distinct eip_equipment_id),error_code from mig_batch_exception where eip_equipment_id in ( 
+select eip_equipment_id from ta5)
+group by error_code ;
+
+create table ta6 as;
+select distinct eip_equipment_id  from emmt_bb.mig_batch_exception where batch_id = 249 and error_code in ( 
+13,
+9,
+33,
+21,
+15,
+20,
+17,
+19,
+8,
+14,
+5);
+
+select * from emmt_bb.mig_batch_exception where error_code = '15'
+AND BATCH_ID = 249;
+
+select * from ta6 where eip_equipment_id not in ( 
+select eip_equipment_id from ta5) ;
+
+
+select * from emmt_bb.mig_batch_list where ban in ( 
+955688228,
+951106109,
+956183448,
+879018341)
+and batch_id = 249;
+
+
+select * from mig_batch_exception where eip_equipment_id = '89394484';
+
