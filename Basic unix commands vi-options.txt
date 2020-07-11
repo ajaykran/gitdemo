@@ -1,0 +1,68 @@
+
+Cursor movement
+Left – h
+Right – l
+Down –j
+Up- k
+	
+Ctrl-f	scrolls forward
+Ctrl-b	scrolls backward
+Ctrl-d	scrolls half page forward
+Ctrl-u	half page backward
+Ctrl-g	current line number
+
+Command Mode commands
+i			- Enter insert mode		
+a			- Enter append mode		
+r			- Enter overwrite mode		
+
+I	inserts text at beginning of line
+A	appends text  at end of line
+o	opens new line below current line
+O	opens new line above current line
+r	replaces one character with one character
+s	replaces one character with many characters
+R	replaces all text on the right of the current cursor position
+S	replaces the entire irrespective of the cursor position
+b	moves back to beginning of word
+w	moves forward to beginning of word
+e	moves forward to end of word
+|	moves cursor to 1st character of line
+30|	moves cursor to 30th column of line
+$	moves cursor to end of line
+G	takes cursor to the end of file
+nG	takes cursor to the nth line
+x	delete the current character
+dd	deletes the current line
+4dd	deletes 4 lines
+yy	yanking
+p	pasting after the current position
+P	pasting before the current position
+J	joins the current line and the line following it
+u	used for undoing
+U	for discarding all changes made in the current line
+.	Repeats the last command
+
+EX-command mode
+:set num		- Display line numbers
+:set nonum		- Set no number	
+:set ai			- Set no auto intend on
+:set noai		- Set auto intend off
+:s				- Substitution
+:w 				– Save
+:e!	discards your edits and returns to the last saved version 
+
+/pattern		- Forward search for “pattern”
+?pattern		- Reverse search for “pattern”
+	n	next in forward direction.
+	N	next in reverse direction
+
+Exit from VI :
+:wq
+:x
+:q!
+ZZ		- Save and exit
+
+vi +100 filename	-  Open the file and place the cursor in 100th line
+vi /pattern	- Open file and place cursor at “pattern”
+.exrc file – to customize the vi environment
